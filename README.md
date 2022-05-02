@@ -3,8 +3,8 @@
 ### Section 1 - (Pre-Request)
 
 1. Replace variable from code
-    a. <<aws account number>>
-    b. <<aws region>>
+    a. << aws account number >>
+    b. << aws region >>
 2. Add secret to Github to perform github action on push changes to main branch.
     ```
     Doc - https://github.com/aws-actions/amazon-ecr-login
