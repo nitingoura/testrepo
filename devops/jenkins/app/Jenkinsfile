@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+    }
+    environment {
+        APP_NAME                     = "infra"
+        GITHUB_URL                   = "https://github.com/nitingoura/testrepo.git"
+        K8_NAMESPACE                 = "prod"
+        AWS_REGION                   = "<<aws region>>"
+        credentialsId                = "dummy"
+        CLUSTER_NAME                 = "dummy"
+        RELEASE_NAME                 = "${APP_NAME}-${K8_NAMESPACE}"
+        gitcredid                    = "dummy"
+    }
+
+    stages {
+        stage("github-checkout") {
+            steps {
+                script {
+                    deleteDir()
+                    git branch: 'main', credentialsId: gitcredid, url: GITHUB_URL
+                }
+            }
+        }
+        stage("helm-install") {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: credentialsId, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        sh "aws eks --region ${AWS_REGION} update-kubeconfig --name ${CLUSTER_NAME}"
+                        dir("devops") {
+                            sh "helm upgrade --install ${RELEASE_NAME} ${APP_NAME} -n ${K8_NAMESPACE} -f values.yaml"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

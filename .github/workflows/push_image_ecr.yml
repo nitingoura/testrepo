@@ -1,0 +1,47 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package/app/**'
+
+permissions:
+   id-token: write
+   contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ secrets.ECR_ACTION_ROLE }} #Check Readme section Prerequest
+        role-session-name: ecr-upload
+        aws-region: us-west-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    
+    - name: Build, tag, and push the image to Amazon ECR Agent
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: nitin-the-remote-testing
+      run: |
+        if [[ $GITHUB_EVENT_NAME == 'push' ]]; then
+          export IMAGE_TAG=$GITHUB_REF_NAME
+        else
+          export IMAGE_TAG=$GITHUB_HEAD_REF
+        fi
+        cd package/app/
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        echo "Pushing image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"

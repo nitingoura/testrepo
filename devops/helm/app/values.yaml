@@ -1,0 +1,86 @@
+# Default values for app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+gateway: "default/gateway"
+
+env:
+  TZ: "America/Denver"
+
+image:
+  repository: <<aws account number>>.dkr.ecr.<<aws region>>.amazonaws.com/nitin-the-remote-testing
+  tag: latest
+  pullPolicy: Always
+
+virtualService:
+  host1: app.nitingoura.com
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
+resources:
+  limits:
+    cpu: 1024m
+    memory: 2048Mi
+  requests:
+    cpu: 512m
+    memory: 512Mi
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: contour
+    cert-manager.io/cluster-issuer: letsencrypt
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+ports:
+  apiname: http
+  apiContainerPort: 80
+  apiprotocol: TCP

@@ -1,0 +1,32 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "app.fullname" . }}-virtualservice
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  hosts:
+    {{- range $key, $value := .Values.virtualService }}
+    - {{ $value | quote }}
+    {{- end }}  
+  gateways:
+    - {{ .Values.gateway }}
+  http:
+  - match:
+    - port: 443
+    - uri:
+        prefix: "/"    
+    route:
+    - destination:
+        host: {{ include "app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.ports.apiContainerPort }}
+      headers:
+        response:
+          set:
+            Content-Security-Policy: {{ toYaml (index .Values "http.route.headers.response.set.csp") }}
+    {{- if (index .Values "http.cors.whitelist") }}    
+    corsPolicy: 
+      {{  (index .Values "http.cors.whitelist") | nindent 6  }}
+    {{- end }}

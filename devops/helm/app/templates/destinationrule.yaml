@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ include "app.fullname" . }}-destinationrule
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  host: {{ include "app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    portLevelSettings:
+    - port:
+        number: 443
+      tls:
+        mode: SIMPLE
