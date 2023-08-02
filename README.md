@@ -37,4 +37,5 @@ example:
       - main
     paths:
       - 'package/app/**'
+      - ''
     ```
